@@ -1,0 +1,18 @@
+# Requirements for Video/Audio Converter
+# Este projeto usa apenas bibliotecas padrão do Python 3
+# O FFmpeg deve ser instalado separadamente no sistema
+
+# Nenhuma dependência Python adicional é necessária
+# As seguintes bibliotecas são usadas (já incluídas no Python 3):
+# - subprocess
+# - os
+# - sys
+# - pathlib
+# - multiprocessing
+# - concurrent.futures
+# - time
+
+# Para instalar o FFmpeg:
+# - macOS: brew install ffmpeg
+# - Ubuntu/Debian: sudo apt update && sudo apt install ffmpeg
+# - Windows: Baixar de https://ffmpeg.org/download.html
