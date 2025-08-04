@@ -95,28 +95,56 @@ def convert_file(input_file, process_id=1, to_mp3=False, to_ac3=False, use_gpu=F
     # Comando ffmpeg para conversão
     if to_mp3:
         # Conversão para MP3 (apenas áudio)
-        cmd = [
-            'ffmpeg',
-            '-i', input_file,
-            '-vn',              # Sem vídeo
-            '-acodec', 'mp3',   # Codec MP3
-            '-ab', '192k',      # Bitrate audio
-            '-ar', '44100',     # Sample rate
-            '-y',               # Sobrescrever se existir
-            output_file
-        ]
+        if use_gpu:
+            # Usar aceleração por GPU para MP3
+            cmd = [
+                'ffmpeg',
+                '-i', input_file,
+                '-vn',              # Sem vídeo
+                '-acodec', 'mp3',   # Codec MP3
+                '-ab', '192k',      # Bitrate audio
+                '-ar', '44100',     # Sample rate
+                '-y',               # Sobrescrever se existir
+                output_file
+            ]
+        else:
+            # Usar CPU
+            cmd = [
+                'ffmpeg',
+                '-i', input_file,
+                '-vn',              # Sem vídeo
+                '-acodec', 'mp3',   # Codec MP3
+                '-ab', '192k',      # Bitrate audio
+                '-ar', '44100',     # Sample rate
+                '-y',               # Sobrescrever se existir
+                output_file
+            ]
     elif to_ac3:
         # Conversão para AC3 (apenas áudio)
-        cmd = [
-            'ffmpeg',
-            '-i', input_file,
-            '-vn',              # Sem vídeo
-            '-acodec', 'ac3',   # Codec AC3
-            '-ab', '640k',      # Bitrate audio (AC3 padrão)
-            '-ar', '48000',     # Sample rate (AC3 padrão)
-            '-y',               # Sobrescrever se existir
-            output_file
-        ]
+        if use_gpu:
+            # Usar aceleração por GPU para AC3
+            cmd = [
+                'ffmpeg',
+                '-i', input_file,
+                '-vn',              # Sem vídeo
+                '-acodec', 'ac3',   # Codec AC3
+                '-ab', '640k',      # Bitrate audio (AC3 padrão)
+                '-ar', '48000',     # Sample rate (AC3 padrão)
+                '-y',               # Sobrescrever se existir
+                output_file
+            ]
+        else:
+            # Usar CPU
+            cmd = [
+                'ffmpeg',
+                '-i', input_file,
+                '-vn',              # Sem vídeo
+                '-acodec', 'ac3',   # Codec AC3
+                '-ab', '640k',      # Bitrate audio (AC3 padrão)
+                '-ar', '48000',     # Sample rate (AC3 padrão)
+                '-y',               # Sobrescrever se existir
+                output_file
+            ]
     else:
         # Conversão para MP4 (vídeo)
         if use_gpu:
@@ -125,9 +153,10 @@ def convert_file(input_file, process_id=1, to_mp3=False, to_ac3=False, use_gpu=F
                 'ffmpeg',
                 '-i', input_file,
                 '-c:v', 'h264_videotoolbox',   # Codec H264 com VideoToolbox
-                '-b:v', '3000k',                # Bitrate de vídeo para GPU
+                '-b:v', '1500k',                # Bitrate de vídeo para GPU
                 '-c:a', 'aac',                  # Audio AAC
-                '-b:a', '192k',                 # Bitrate audio
+                '-b:a', '128k', 
+                '-realtime', '1',                # real time
                 '-movflags', '+faststart',      # Otimização
                 '-y',                           # Sobrescrever se existir
                 output_file
@@ -316,20 +345,29 @@ def main():
     else:
         output_format = "MP4"
     
-    # Perguntar sobre uso de GPU apenas se for conversão para MP4
+    # Perguntar sobre uso de GPU
     use_gpu = False
+    print(f"\n🖥️  Usar aceleração por GPU?")
     if not to_mp3 and not to_ac3:
-        print(f"\n🖥️  Usar aceleração por GPU (VideoToolbox)?")
-        print("  • GPU: Mais rápido, mas qualidade fixa")
+        print("  • GPU: Mais rápido, mas qualidade fixa (VideoToolbox)")
         print("  • CPU: Mais lento, mas melhor controle de qualidade")
-        
-        gpu_choice = input("\nUsar GPU? (s/n): ").strip().lower()
-        use_gpu = (gpu_choice == 's')
-        
-        if use_gpu:
+    else:
+        print("  • GPU: Pode acelerar o processamento de áudio")
+        print("  • CPU: Processamento padrão")
+    
+    gpu_choice = input("\nUsar GPU? (s/n): ").strip().lower()
+    use_gpu = (gpu_choice == 's')
+    
+    if use_gpu:
+        if not to_mp3 and not to_ac3:
             print("✅ Usando aceleração por GPU (h264_videotoolbox)")
         else:
+            print("✅ Usando aceleração por GPU para processamento de áudio")
+    else:
+        if not to_mp3 and not to_ac3:
             print("✅ Usando CPU (libx264 com CRF 18)")
+        else:
+            print("✅ Usando CPU para processamento de áudio")
     
     # Confirmar conversão
     print(f"\n🚀 Converter {len(media_files)} arquivos para {output_format} com {max_workers} processos?")
